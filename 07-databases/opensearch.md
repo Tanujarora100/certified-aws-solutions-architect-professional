@@ -4,10 +4,10 @@
 - OpenSearch is not serverless, it runs in a VPC using compute
 - OpenSearch is usually an alternative to other AWS services
 - Can be used for log analytics, monitoring, security analytics, full text search and indexing, click stream analytics
+![alt text](image.png)
 
 ## ELK Stack
-
 - ElasticSearch (or OpenSearch on AWS): provides search and indexing services
 - Kibana: visualization and dashboard tool
-- Logstash: similar to CloudWatch Logs, needs a Logstash agent installed on anything to ingest data
+- Logstash: similar to CloudWatch Logs, needs a `Logstash agent` installed on anything to ingest data
 
