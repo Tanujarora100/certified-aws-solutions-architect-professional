@@ -174,7 +174,7 @@
 - Global tables provide multi-master cross-region replication
 - To implement global tables we have to create tables in multiple regions and add them to the same global table (becoming replicate tables)
 - DynamoDB utilizes **last writer wins** in conflict resolution
-- We can read and write to any region, updates are replicated generally sub-second
+- We can `read and write to any region`, updates are replicated generally sub-second
 - Strongly consistent reads are only supported in the same region as writes
 - Global tables provide global HA and global DR/BC
 
@@ -186,5 +186,5 @@
 - A per-partition process periodically runs for checking the current time to the value in the TTL attribute
 - Items where the TTL attribute is older than the current time are set to expired
 - Another per-partition background process scans for expired items and removes them from tables and indexes, adding a delete event to the streams is enabled
-- These processes run on the background without affecting the performance of the table and without any additional charge
+- These processes run on the background without affecting the performance of the table and `without any additional charge`
 - We can configure a dedicated stream linked to the TTL processes, having 24h rolling window for any deletions caused by the TTL processes. Useful if we want to have any housekeeping where we track the TTL events that occur on tables (for example we can implement an un-delete process)
