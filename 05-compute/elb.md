@@ -96,18 +96,19 @@
 - Stickiness: allows us to control which backend instance to be used for a given connection
 - With no stickiness connections are distributed across all backend services
 - Enabling stickiness:
-    - CLB: we can enable it per LB
-    - ALB: we can enable it per target group
-- When stickiness is enabled, the LB generates a cookie: `AWSALB` for ALB / `AWSELB` for CLB which is delivered to the end-user
-- This cookie has a duration defined between 1 sec and 7 days
+    - CLB: we can enable it `per LB`
+    - ALB: we can enable it `per target group` basis.
+- When stickiness is enabled, the LB generates a cookie: `AWSALB` for ALB / `AWSELB` for CLB which is delivered to the end-user.
+-  `AWSALB/AWSELB` is held by the client and not the load balancer and is given to the client by load balancer.
+- This cookie has a duration defined between **1 sec and 7 days**
 - When the user accesses the LB, it provides the cookie to the LB
 - The LB than can decide to route the connection to the same backend instance every time while the cookie is not expired
 - Change of the backed instance if the cookie is present:
-    - If the instance to which the cookie maps to fails, then a new instance will be selected
-    - If the cookie expires => the cookie will be removed, new cookie is created while a new instance is chosen
+    - If the instance to which the cookie maps to fails, then a new instance will be selected, in this scenario the session will be lost.
+    - If the cookie expires => the cookie will be removed, new cookie is created while a new instance is chosen.
 - Session stickiness problems: load can become unbalanced
-- Enable session stickiness if an application does't use external sessions
-
+- Enable session stickiness if an application does't use external sessions management like elasticache etc as elasticache requires heavy code changes, this is a very good option.
+![alt text](image.png)
 ## Connection Draining and Deregistration Delay
 
 - Connection draining a setting which controls what happens when instances are unhealthy or deregistered
