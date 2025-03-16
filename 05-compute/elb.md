@@ -72,6 +72,7 @@
         - Rules are processed in a priority order, default rule being a catch all
         - Rule conditions: host-header, http-header, http-request-method, path-pattern, query-string and source-ip
         - Rule actions: forward, redirect, fixed-response, authenticate-oidc and authenticate-cognito
+![alt text](image-1.png)
     - The connection from the LB and the instance is a separate connection
     - If you need to forward connections without terminating on the LB, then you need to consider NLB. (<span style="color: #ff5733;">EXAM</span>)
 - **Network Load Balancer (NLB)**:

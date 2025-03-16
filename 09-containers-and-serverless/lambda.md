@@ -2,48 +2,43 @@
 
 - Lambda is a Function-as-a-Service (FaaS) product. We provide specialized short running focused code for Lambda and it will take care running it and billing us for only what we consume
 - Every Lambda function uses a supported runtime, example: Python 3.8, Java 8, NodeJS
-- Every Lambda function is loaded into an executed in a runtime environment
-- When we create a function we define the resources the function will use. We define the memory directly and CPU usage allocation indirectly (based on the amount of memory)
-- We are only billed for the duration the function is running based on the number of invocations and the resources specified
-- Lambda is a key part of serverless architectures in AWS
-- Lambda has support for the following runtimes:
-    - Python
-    - Ruby
-    - Go
-    - Java
-    - C#
-    - Custom using Lambda layers (such as Rust)
+- Every Lambda function is loaded into an executed in a `runtime environment` , this environment is suitable for that specific language.
+- When we create a function we define the resources the function will use. We define the `memory directly` and `CPU usage allocation indirectly` (based on the amount of memory)
 - Lambda deployment package size:
     - 50 MB zipped
     - 250 MB unzipped
-    - Up to 10 GB as a Docker image
-- Lambda functions are stateless, meaning there is no data left over after an invocation
+    - Up to `10 GB`as a Docker image
 - When creating a Lambda function we define the memory. The memory can be between 128 MB and 10240 MB in 1 MB steps
-- We do not directly define the vCPU allocated to each function, it will automatically scale with the memory: 1769 MB of memory gives 1 vCPU
-- The runtime env. has a 512 MB (by default) storage available as `/tmp`. We can scale this storage up to 10240 MB. We can use this storage for whatever we need as long as we assume that it is blank at each execution of the function
-- Lambda function can run up to 15 minutes, after this a timeout will occur
-- The security for a Lambda function is controlled by the execution role. This is an IAM role attached to the function. This can have permissions for integration with other AWS services
+- We do not directly define the vCPU allocated to each function, it will automatically scale with the memory: `1769 MB of memory` gives 1 vCPU
+- The runtime env. has a 512 MB (by default) storage available as `/tmp`. We can scale this storage up to `10240 MB`. We can use this storage for whatever we need as long as we assume that it is blank at each execution of the function
+![alt text](image.png)
 
 ## Lambda Networking
 
 - Lambda functions can have 2 types of networking modes:
     - Public (default):
-        - Lambda can access public AWS services such as SQS, DynamoDB, etc. and also internet based services
-        - Lambda has network connectivity to public services running on the internet
+        - Lambda can access public AWS services such as SQS,S3, DynamoDB, etc. and also internet based services
         - Offers the best performance for Lambda, no customer specific networking is required
-        - With public networking mode Lambda function wont be able to access resources in a VPC unless the resources do have public IPs and security controls allow external access
+        - With p`ublic networking mode Lambda function wont be able to access resources in a VPC` unless the resources do have public IPs and security controls allow external access
+        ![alt text](image-1.png)
     - VPC Networking:
         - Lambda functions will run inside a VPC, so they will access everything in a VPC, assuming NACLs and SGs allow access
         - They wont be able to access services outside of the VPC, unless networking configuration exists in the VPC to allow external access
-        - The Lambda needs `EC2Networking` permissions in order ot be able to create ENIs in the VPC
-        - VPC based Lambda functions do not directly in the VPC, they will use a shared ENI to access resources in the VPC as long as all the functions have the same Security Group. In case new Security Groups are attached to a certain Lambda, new ENIs are placed inside the VPC
-        - At the creation of the function, a certain ENI might be created for accessing the VPC. The initial setup would take up to 90 seconds. This setup will take place only once, not at every invocation
+        - The Lambda needs `EC2Networking` permissions in order ot be able to `create ENIs` in the VPC
+        - VPC based Lambda functions do not run directly in the VPC, they will use a `shared ENI to access resources in the VPC` as long as all the functions have the same Security Group. In case new Security Groups are attached to a certain Lambda, new ENIs are placed inside the VPC.
+        - These ENI's are dependent on the combination of your subnet and the security group you are attaching to that lambda.
+        - If the subnet and security group are same across all your lambda's only one ENI is created.
+        - At the creation of the function, a certain ENI might be created for accessing the VPC. `The initial setup would take up to 90 seconds. This setup will take place only once, not at every invocation`
+        ![alt text](image-2.png)
 
 ## Lambda Security
 
 - There are 2 key parts of the security model
     - Lambda Functions will assume an execution role in order to access other AWS resources
-    - Resource policies: similar to resource policies for S3. Allows external accounts to invoke a Lambda functions, or certain services to use Lambda functions. Resources polices can be modified using the CLI/API (currently cannot be changed with the console)
+    - Resource policies: similar to resource policies for S3. Allows external accounts to invoke a Lambda functions, or certain services to use Lambda functions. 
+    - Resource policy now can be changed from console also.
+    ![alt text](image-4.png)
+    ![alt text](image-3.png)
 
 ## Lambda Logging
 
@@ -51,49 +46,88 @@
 - Logs from Lambda executions are stored in CloudWatch Logs
 - Details about Lambda metrics are stored in CloudWatch Metrics
 - Lambda can be integrated with X-Ray for distributed tracing
-- For Lambda to be able to log we need to give permissions via the execution role
+- For Lambda to be able to log we need to give permissions via the execution role. For cloudwatch we need to give proper permissions.
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDynamoDBRead",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+      ],
+      "Resource": "arn:aws:dynamodb:<region>:<account-id>:table/<your-table-name>"
+    },
+    {
+      "Sid": "AllowS3Write",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": "arn:aws:s3:::<your-s3-bucket-name>/*"
+    },
+    {
+      "Sid": "AllowCloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
 
+```
 ## Lambda Invocations
 
 - There are 3 ways Lambda functions can be invoked:
     - **Synchronous invocation**:
         - Command line or API directly invoking the function
         - The CLI or API will wait until the function returns
-        - API Gateway will also invoke Lambdas synchronously, use case for many serverless applications
+        - `API Gateway will also invoke Lambdas synchronously`, use case for many serverless applications
         - Any errors or retries have to be handled on the client side
     - **Asynchronous invocation**:
         - Used typically when AWS services invoke the function (example: S3 events)
         - The service will not wait for the response (fire and forget)
-        - Lambda is responsible for any failure. Reprocessing will happen between 0 and 2 times
+        - Lambda is responsible for any failure. `Reprocessing will happen between 0 and 2 times`.
         - The function should be idempotent in order to be rerun
         - Lambda can be configured to send events to a DLQ in case of the processing did not succeed after the number of retries
-        - Destination: events processed by Lambdas can be delivered to destinations like SQS, SNS, other Lambda, EventBride. Success and failure events can be sent to different destinations
+        - Destination: events processed by Lambdas can be delivered to destinations like SQS, SNS, other Lambda, EventBridge. Success and failure events can be sent to different destinations
+        ![alt text](image-5.png)
     - **Event Source mapping**:
         - Typically used on streams or queues which don't generate events (Kinesis, DynamoDB streams, SQS)
-        - Event Source mappers polls these streams and retrieves batches. These batches can be broken in pieces and sent to multiple Lambda invocations for processing
-        - We can not have a partially successful batch, either everything works or nothing works
+        - Event Source mappers polls these streams and retrieves batches. `These batches can be broken in pieces and sent to multiple Lambda invocations for processing`
+        - We can not have a partially successful batch, either everything works or nothing works.
 - In case of event processing in async invocation, in order to process the event we don't explicitly need rights to read from the sender
-- In case of event source mapping the event source mapper is reading from the source. The event source mapping uses permissions from the Lambda execution role to access the source service
+- In case of event source mapping the event source mapper is reading from the source. `The event source mapping uses permissions from the Lambda execution role to access the source service`
 - Even if the function does not read data directly from the stream, the execution role needs read rights in order to handle the event batch
 - Any batch that consistently fails to be processed, it can be sent to an SQS queue or SNS topic for further processing
+![alt text](image-7.png)
 
 ## Lambda Versions
 
-- We can define different versions for given functions
+- We can define different versions for given functions.
 - A version of a function is the code + configuration of the function
 - When we publish a version, it becomes immutable, it no longer can be changed. It event gets its own ARN (Amazon Resource Name)
-- `$Latest` points to the latest version of Lambda version (it is not immutable)
-- We can also define aliases (DEV, STAGE, PROD) which point to a version of the function. Aliases can be changed to point to other versions
+- `$Latest` points to the latest version of Lambda version `(it is  mutable)
+- We can also define `aliases (DEV, STAGE, PROD)` which point to a version of the function. Aliases can be changed to point to other versions.
 
 ## Lambda Start-up Times
 
 - Lambda code runs inside of a runtime environment (execution context)
-- At first invocation this execution context needs to be created and this will take time
-- This process is known as cold start and it can take 100ms or more
-- If the function is invoked again without too much of a gap, it might use the same execution context. This is called warm start
-- One function invocation runs in an execution environment at a time. If multiple parallel instances are needed, the contexts will require cold starts
-- **Provisioned concurrency**: we can provision one or more execution contexts in advance for Lambda invocations
-- The improve performance we can use the `/tmp` folder to pre-download data to it. If another invocations uses the same execution context, it will be able to access the previously downloaded data
+- At first invocation this execution context needs to be created and this will take time.
+- This process is known as `cold start and it can take 100ms` or more
+- If the function is invoked again without too much of a gap, it might use the same execution context. This is called warm start.
+- One function invocation runs in an execution environment at a time. If multiple parallel instances are needed, the contexts will require cold starts.
+![alt text](image-8.png)
+- **Provisioned concurrency**: we can provision one or more execution contexts in advance for Lambda invocations, leading to less cold starts.
+- The improve performance we can use the `/tmp` folder to pre-download data to it. If another invocations uses the same execution context, it will be able to access the previously downloaded data.
 - We can create database connections outside of the Lambda handler. These will also be available for other invocations afterwards
 
 ## Lambda Function Handler

@@ -11,18 +11,22 @@
 - At the top of this tree is the root container of the organization (just a container within the organization, NOT to be confused with the root user)
 - This root container can contain other containers, this containers are known as **Organizational Units (OU)**
 - OUs can contains accounts (Management/Member accounts) or other OUs
+![alt text](image-1.png)
 
 ## Consolidated Billing
 
 - It is an important feature of AWS Organizations
 - The individual billing method of each account from the organization is removed, the member accounts pass their billing through the Management Account (**Payer Account**)
 - Using consolidated billing we get a single monthly bill. This covers the Management Account and all the Member Accounts of the Organization
-- When using organization reservation benefits and discounts are pooled, meaning the organization can benefit as a whole for the spending of each AWS account within the org
+- When using organization reservation benefits and discounts are pooled, meaning the organization can benefit as a whole for the spending of each AWS account within the org.
+![alt text](image.png)
 
 ## Best Practices
 
 - Have a single account into which users can log into and assume IAM roles in order to access other accounts from the org
 - The account with all the identities may be the Management Account or it can be another Member Account (*Login Account*)
+- use roles to login to other accounts, behind the scenes sts creates the temporary credentials called ROLE SWITCHING.
+![alt text](image-3.png)
 
 ## `OrganizationAccountAccessRole`
 

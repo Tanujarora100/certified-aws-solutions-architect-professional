@@ -85,11 +85,11 @@
 
 ## Simple Routing
 
-- With simple routing with can create one record per name
-- Each record can have multiple values
-- In case of a request, all the values for the record are returned to the client
-- The client choses one of the values an connects to the server
-- Limitations: does not support health checks!
+- With simple routing with can create one record per name.
+- Each record can have multiple values.
+- In case of a request, all the values for the record are returned to the client in random order then client has to choose which server to connect to incase there are multiple.
+- Limitations: does not support health checks.
+![alt text](image.png)
 
 ## Health Checks
 
